@@ -7,14 +7,17 @@ const puppeteer = require("puppeteer")
 // -- 引入js
 const { generateExcelFile } = require("./generateExcelFile")
 
-const getProductInfo = async (browser, url = "https://24h.pchome.com.tw/category/DGAD08C" , callback) => {
+const getProductInfo = async (browser, config , callback) => {
     try {
+        const { url, name, excelColumns } = config
         const page = await browser.newPage()
         await page.goto(url)
         console.log("page loaded")
         // 取得商品資料
         const productInfo = []
-
+        let currentPage = 1
+        console.log(`開始爬蟲 - ${name}`)
+        console.log(`目標網站 - ${url}`)
 
         for(let i = 1; i < Infinity; i++){
             // 等待特定的 JavaScript 條件為真
@@ -26,6 +29,8 @@ const getProductInfo = async (browser, url = "https://24h.pchome.com.tw/category
             const html = await page.content()
             // 使用 cheerio 解析 HTML
             const $ = cheerio.load(html)
+
+            console.log(`正在爬取第 ${currentPage} 頁`)
     
             // 目標資料
             const targetData = await callback($)
@@ -39,9 +44,15 @@ const getProductInfo = async (browser, url = "https://24h.pchome.com.tw/category
             }
             // 點擊下一頁按鈕
             await nextPageButton.click()
+            currentPage++
         }
+
+        console.log(`爬蟲結束 - ${name}`)
+        console.log(`共爬取 ${productInfo.length} 筆資料`)
         
-      
+        // 生成 Excel 文件    
+        await generateExcelFile(productInfo, excelColumns, name)
+        
         return productInfo
     }catch(err){
         console.log(err)
@@ -52,62 +63,57 @@ const getProductInfo = async (browser, url = "https://24h.pchome.com.tw/category
 ;(async () => {
     // return
   const browser = await puppeteer.launch({ 
-    headless: false,
-    slowMo: 200, // 每個操作減慢 50 毫秒
+    headless: true, // 是否不要介面 true:無介面 false:有介面
+    slowMo: 50, // 每個操作減慢 50 毫秒
     defaultViewport: {
         width: 1920,
         height: 1080
     },
  })
-//   const browser = await puppeteer.launch()
-  
-  const targetUrl = "https://24h.pchome.com.tw/category/DGAD08C"
+
+  // 網站1的配置
+  const web1Config = {
+    url: "https://24h.pchome.com.tw/category/DGAD08C",
+    name: "pcHome拍立得",
+    excelColumns: [
+        { header: 'Name', key: 'name', width: 50 },
+        { header: 'Price', key: 'price', width: 50 }
+    ]
+  }
+
   // 取得商品資料
-  const productInfo1 = await getProductInfo(browser, targetUrl, async $=>{
+  await getProductInfo(browser, web1Config, async $=>{
     const data = []
     $(".c-listInfoGrid__item").each((index, element) => {
-        // console.log("-------------------")
         const name = $(element).find(".c-prodInfoV2__title").text()
-        // console.log("name:", name)
         const price = $(element)
           .find(".c-prodInfoV2__price .c-prodInfoV2__priceValue")
           .text()
-        // console.log("price:", price)
-        // productInfo.push({ title, price })
-        // console.log("-------------------")
         data.push({ name, price }) 
     })
     return data
   })
-  console.log(productInfo1)
-  console.log(productInfo1.length)
-
-  const columns = [
-      { header: 'Name', key: 'name', width: 50 },
-      { header: 'Price', key: 'price', width: 50 }
-  ]
-  await generateExcelFile(productInfo1, columns, 'pcHome拍立得')
-
-
-  const targetUrl2 = "https://24h.pchome.com.tw/search/?q=%E6%8A%80%E5%98%89%E9%A1%AF%E7%A4%BA%E5%8D%A1&p=1"
+  // 網站1的配置
+  const web2Config = {
+    url: "https://24h.pchome.com.tw/search/?q=%E6%8A%80%E5%98%89%E9%A1%AF%E7%A4%BA%E5%8D%A1&p=1",
+    name: "pcHome顯示卡",
+    excelColumns: [
+        { header: 'Name', key: 'name', width: 50 },
+        { header: 'Price', key: 'price', width: 50 }
+    ]
+  }
   // 取得商品資料
-  const productInfo2 = await getProductInfo(browser, targetUrl2, async $=>{
+  await getProductInfo(browser, web2Config, async $=>{
     const data = []
     $(".c-listInfoGrid__item").each((index, element) => {
-        // console.log("-------------------")
         const name = $(element).find(".c-prodInfoV2__title").text()
-        // console.log("name:", name)
         const price = $(element)
           .find(".c-prodInfoV2__price .c-prodInfoV2__priceValue")
           .text()
-        // console.log("price:", price)
-        // productInfo.push({ title, price })
-        // console.log("-------------------")
         data.push({ name, price }) 
     })
     return data
   })
-  await generateExcelFile(productInfo2, columns, 'pcHome顯示卡')
   // 成功完成後終止腳本
   process.exit(0);
 })()

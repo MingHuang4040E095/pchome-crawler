@@ -3,6 +3,7 @@ const path = require("path")
 const fs = require("fs")
 // 生成 Excel 文件
 const generateExcelFile = async (data = [], columns = [], fileName = '')=>{
+    console.log('開始生成 Excel 文件')
     // 創建一個新的工作簿
     const workbook = new ExcelJS.Workbook();
     const worksheet = workbook.addWorksheet('Users');
@@ -31,7 +32,8 @@ const generateExcelFile = async (data = [], columns = [], fileName = '')=>{
   
     // 將工作簿寫入文件
     await workbook.xlsx.writeFile(outputPath);
-    console.log(`Excel file has been saved to ${outputPath}`)
+    console.log(`excel已輸出至 ${outputPath}`)
+    console.log('======================================')
   }
 
   const getTimestamp = ()=>{
