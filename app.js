@@ -3,6 +3,7 @@ const puppeteer = require("puppeteer")
 
 // -- 引入js
 const { generateExcelFile } = require("./generateExcelFile")
+const { sendEmail } = require("./sendEmail")
 
 /**
  * 取得商品資料
@@ -125,7 +126,7 @@ const main = async () => {
     })
     return data
   })
-  sendNotify("爬蟲結束", "所有爬蟲任務已經完成")
+  sendEmail()
   // 成功完成後終止腳本
   process.exit(0)
 }
