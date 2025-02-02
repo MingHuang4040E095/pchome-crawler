@@ -27,7 +27,6 @@ const sendEmail = () => {
     console.log("已發送Email: " + info.response)
   })
 }
-sendEmail()
 module.exports = {
   sendEmail,
 }
