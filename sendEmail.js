@@ -1,7 +1,8 @@
 require("dotenv").config()
 const nodemailer = require("nodemailer")
+const util = require("util")
 
-const sendEmail = () => {
+const sendEmail = async () => {
   // 創建傳輸器
   let transporter = nodemailer.createTransport({
     service: "gmail", // 使用 Gmail 服務
@@ -19,13 +20,12 @@ const sendEmail = () => {
     text: "已完成今日爬蟲", // 郵件正文
   }
 
-  // 發送郵件
-  transporter.sendMail(mailOptions, (error, info) => {
-    if (error) {
-      return console.log(error)
-    }
-    console.log("已發送Email: " + info.response)
-  })
+  // 使用 util.promisify 將 sendMail 轉換為返回 Promise 的方法
+  const sendMail = util.promisify(transporter.sendMail).bind(transporter)
+
+  // 使用 await 等待 sendMail 完成
+  let info = await sendMail(mailOptions)
+  console.log("Email sent: " + info.response)
 }
 module.exports = {
   sendEmail,

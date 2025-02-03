@@ -16,7 +16,7 @@ const getProductInfo = async (browser, config, callback) => {
   try {
     const { url, name, excelColumns } = config
     const page = await browser.newPage()
-    await page.goto(url)
+    await page.goto(url, { timeout: 600000 })
     console.log("page loaded")
     // 取得商品資料
     const productInfo = []
@@ -27,7 +27,8 @@ const getProductInfo = async (browser, config, callback) => {
     for (let i = 1; i < Infinity; i++) {
       // 等待特定的 JavaScript 條件為真
       await page.waitForFunction(
-        'document.querySelectorAll(".c-listInfoGrid__item .c-prodInfoV2__text")[0]?.innerText'
+        'document.querySelectorAll(".c-listInfoGrid__item .c-prodInfoV2__text")[0]?.innerText',
+        { timeout: 600000 }
       )
 
       // 取得頁面的 HTML
@@ -63,6 +64,7 @@ const getProductInfo = async (browser, config, callback) => {
     return productInfo
   } catch (err) {
     console.log(err)
+    // TODO:錯誤處理，從上次失敗的地方繼續執行
     return []
   }
 }
@@ -78,31 +80,31 @@ const main = async () => {
     },
   })
 
-  // 網站1的配置
-  const web1Config = {
-    url: "https://24h.pchome.com.tw/category/DGAD08C",
-    name: "pcHome拍立得",
-    excelColumns: [
-      { header: "Name", key: "name", width: 50 },
-      { header: "Price", key: "price", width: 50 },
-    ],
-  }
+  // // 網站1的配置
+  // const web1Config = {
+  //   url: "https://24h.pchome.com.tw/category/DGAD08C",
+  //   name: "pcHome拍立得",
+  //   excelColumns: [
+  //     { header: "Name", key: "name", width: 50 },
+  //     { header: "Price", key: "price", width: 50 },
+  //   ],
+  // }
 
-  // 取得商品資料
-  await getProductInfo(browser, web1Config, async ($) => {
-    const data = []
-    $(".c-listInfoGrid__item").each((index, element) => {
-      const name = $(element).find(".c-prodInfoV2__title").text().trim()
-      const price = $(element)
-        .find(".c-prodInfoV2__price .c-prodInfoV2__priceValue")
-        .text()
-        .trim()
+  // // 取得商品資料
+  // await getProductInfo(browser, web1Config, async ($) => {
+  //   const data = []
+  //   $(".c-listInfoGrid__item").each((index, element) => {
+  //     const name = $(element).find(".c-prodInfoV2__title").text().trim()
+  //     const price = $(element)
+  //       .find(".c-prodInfoV2__price .c-prodInfoV2__priceValue")
+  //       .text()
+  //       .trim()
 
-      // 其中一個有值就加入
-      if (name || price) data.push({ name, price })
-    })
-    return data
-  })
+  //     // 其中一個有值就加入
+  //     if (name || price) data.push({ name, price })
+  //   })
+  //   return data
+  // })
   // 網站2的配置
   const web2Config = {
     name: "iphone",
@@ -126,7 +128,7 @@ const main = async () => {
     })
     return data
   })
-  sendEmail()
+  await sendEmail()
   // 成功完成後終止腳本
   process.exit(0)
 }
